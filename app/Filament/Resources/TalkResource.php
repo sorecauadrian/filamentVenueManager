@@ -3,14 +3,17 @@
 namespace App\Filament\Resources;
 
 use App\Enums\TalkLength;
+use App\Enums\TalkStatus;
 use App\Filament\Resources\TalkResource\Pages;
 use App\Filament\Resources\TalkResource\RelationManagers;
 use App\Models\Talk;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use PHPUnit\Util\Filter;
 
@@ -92,11 +95,48 @@ class TalkResource extends Resource
                     })
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->slideOver(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('approve')
+                        ->visible(function ($record) { return $record->status === (TalkStatus::SUBMITTED);})
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(function (Talk $record) {
+                            $record->approve();
+                        })->after(function () {
+                            Notification::make()->success()
+                                ->title('Talk Approved')
+                                ->duration(1000)
+                                ->body('The speaker has been notified and the talk has been added to the conference schedule')
+                                ->send();
+                        }),
+                    Tables\Actions\Action::make('reject')
+                        ->visible(function ($record) { return $record->status === (TalkStatus::SUBMITTED);})
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function (Talk $record) {
+                            $record->reject();
+                        })->after(function () {
+                            Notification::make()->danger()
+                                ->title('Talk Rejected')
+                                ->duration(1000)
+                                ->body('The speaker has been notified and the talk has been removed from the conference schedule')
+                                ->send();
+                        }),
+                ]),
+
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('approve')
+                        ->action(function (Collection $records) {
+                            $records->each->approve();
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }
@@ -113,7 +153,6 @@ class TalkResource extends Resource
         return [
             'index' => Pages\ListTalks::route('/'),
             'create' => Pages\CreateTalk::route('/create'),
-            'edit' => Pages\EditTalk::route('/{record}/edit'),
         ];
     }
 }
