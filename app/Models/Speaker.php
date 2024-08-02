@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,10 +33,12 @@ class Speaker extends Model
         'id' => 'integer',
         'qualifications' => 'array',
     ];
+
     public function conferences(): BelongsToMany
     {
         return $this->belongsToMany(Conference::class);
     }
+
     public function talks(): HasMany
     {
         return $this->hasMany(Talk::class);
@@ -50,13 +53,15 @@ class Speaker extends Model
             FileUpload::make('avatar')
                 ->avatar()
                 ->directory('avatars')
+                ->preserveFilenames()
                 ->imageEditor()
                 ->maxSize(1024 * 1024 * 10),
             TextInput::make('email')
                 ->email()
                 ->required()
                 ->maxLength(255),
-            Textarea::make('bio')
+            RichEditor::make('bio')
+                ->maxLength(65535)
                 ->columnSpanFull(),
             TextInput::make('twitter_handle')
                 ->maxLength(255),
@@ -66,20 +71,10 @@ class Speaker extends Model
                 ->bulkToggleable()
                 ->options(self::QUALIFICATIONS)
                 ->descriptions([
-                    'business-leader' => 'Has experience leading a business.',
-                    'charisma' => 'Has a charismatic speaking style.',
-                    'first-time' => 'Has never spoken at a conference before.',
-                    'hometown-hero' => 'Is a local hero in their hometown.',
-                    'humanitarian' => 'Works in the humanitarian field.',
-                    'laracasts-contributor' => 'Has contributed to Laracasts.',
-                    'twitter-influencer' => 'Has a large following on Twitter.',
-                    'youtube-influencer' => 'Has a large following on YouTube.',
-                    'open-source' => 'Creates or maintains open source projects.',
-                    'unique-perspective' => 'Has a unique perspective on a topic.',
+                    'business-leader' => 'Here is a nice long description',
+                    'charisma' => 'This is even more information about why you should pick this one',
                 ])
-                ->columns(3)
-
+                ->columns(3),
         ];
     }
-
 }
