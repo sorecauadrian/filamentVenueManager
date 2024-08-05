@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\Region;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\MarkdownEditor;
@@ -46,43 +48,50 @@ class Conference extends Model
         return $this->belongsToMany(Talk::class);
     }
 
+    public function attendees(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Attendee::class);
+    }
+
     public static function getForm(): array
     {
         return [
             Section::make('Conference Details')
-            //->aside()
-            ->collapsible()
-            ->description('Enter the details of the conference.')
-            ->icon('heroicon-o-information-circle')
-            ->columns(2)
-            ->schema([
-                TextInput::make('name')
-                    ->columnSpanFull(2)
-                    ->label('Conference Name')
-                    ->required()
-                    ->maxLength(255),
-                MarkdownEditor::make('description')
-                    ->columnSpanFull(2)
-                    ->required(),
-                DateTimePicker::make('start_date')
-                    ->required(),
-                DateTimePicker::make('end_date')
-                    ->required(),
-                Fieldset::make('Status')
-                    ->columns(1)
-                    ->schema([
-                        Select::make('status')
-                            ->options([
-                                'draft' => 'Draft',
-                                'published' => 'Published',
-                                'cancelled' => 'Cancelled',
-                            ])
-                            ->required(),
-                        Toggle::make('is_published')
-                            ->default(true),
-                    ]),
+                ->collapsible()
+                ->description('Provide some basic information about the conference.')
+                ->icon('heroicon-o-information-circle')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->columnSpanFull()
+                        ->label('Conference Name')
+                        ->default('My Conference')
+                        ->required()
+                        ->maxLength(60),
+                    MarkdownEditor::make('description')
+                        ->columnSpanFull()
+                        ->required(),
+                    DateTimePicker::make('start_date')
+                        ->native(false)
+                        ->required(),
+                    DateTimePicker::make('end_date')
+                        ->native(false)
+                        ->required(),
+                    Fieldset::make('Status')
+                        ->columns(1)
+                        ->schema([
+                            Select::make('status')
+                                ->options([
+                                    'draft' => 'Draft',
+                                    'published' => 'Published',
+                                    'archived' => 'Archived',
+                                ])
+                                ->required(),
+                            Toggle::make('is_published')
+                                ->default(true),
+                        ]),
                 ]),
-            Section::make('Conference Location')
+            Section::make('Location')
                 ->columns(2)
                 ->schema([
                     Select::make('region')
@@ -116,10 +125,6 @@ class Conference extends Model
                         $livewire->form->fill($data);
                     }),
             ]),
-//            CheckboxList::make('speakers')
-//                ->relationship('speakers', 'name')
-//                ->options(Speaker::all()->pluck('name', 'id'))
-//                ->required(),
         ];
     }
 }
