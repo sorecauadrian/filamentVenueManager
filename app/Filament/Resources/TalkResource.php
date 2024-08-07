@@ -22,7 +22,9 @@ class TalkResource extends Resource
 {
     protected static ?string $model = Talk::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+//    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationGroup = 'Second Group';
 
     public static function form(Form $form): Form
     {
@@ -130,6 +132,14 @@ class TalkResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->tooltip('This will export all records visible in the table. Adjust filters to export a subset of records.')
+                    ->action(function ($livewire) {
+                        ray($livewire->getFilteredTableQuery()->count());
+                        ray("Exporting talks");
+                    })
             ]);
     }
 
